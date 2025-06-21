@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.log
+*.pid
+venv/
+.env
+
+# nano-vllm related (if any specific patterns emerge)
+# nano-vllm/__pycache__/
+# nano-vllm/nanovllm/__pycache__/
+
+# IDEs
+.idea/
+.vscode/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Dependencies (if not using a lock file)
+# If you manage dependencies with pip install -r requirements.txt, you might want to ignore the installed packages themselves.
+# However, in this project, we are assuming dependencies are managed via requirements.txt and installed in venv.
+
+# Other temp files
+*.tmp
+*.bak 
