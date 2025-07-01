@@ -1,8 +1,12 @@
 import requests
 import json
+import urllib3
+
+# 禁用自签名证书警告
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 1. OpenAI 兼容接口测试
-OPENAI_API_URL = "http://localhost:80/v1/chat/completions"
+OPENAI_API_URL = "https://localhost/v1/chat/completions"  # 使用 HTTPS
 openai_payload = {
     "messages": [
         {"role": "system", "content": "你是一个有帮助的助手。"},
@@ -14,7 +18,7 @@ openai_payload = {
 
 print("\n==== 测试 OpenAI 兼容接口 /v1/chat/completions ====")
 try:
-    response = requests.post(OPENAI_API_URL, json=openai_payload)
+    response = requests.post(OPENAI_API_URL, json=openai_payload, verify=False)  # verify=False 允许自签名证书
     response.raise_for_status()
     print("请求成功！")
     print("状态码:", response.status_code)
@@ -24,7 +28,7 @@ except Exception as e:
     print(f"OpenAI 兼容接口测试失败: {e}")
 
 # 2. 兼容旧版 /generate 接口测试
-API_URL = "http://localhost:80/generate"
+API_URL = "https://localhost/generate"  # 使用 HTTPS
 payload = {
     "prompts": [
         "请写一个关于人工智能的短故事。",
@@ -38,7 +42,7 @@ payload = {
 
 print("\n==== 测试旧版 /generate 接口 ====")
 try:
-    response = requests.post(API_URL, json=payload)
+    response = requests.post(API_URL, json=payload, verify=False)  # verify=False 允许自签名证书
     response.raise_for_status()
     print("请求成功！")
     print("状态码:", response.status_code)

@@ -6,5 +6,15 @@
 5.生成测试脚本； 
 6.追求极致性能，uWSGI+nginx unix soclet 链接。
 
-接口符合 openai 规范；
-openai web前端；
+接口符合 ；
+    api_gate 符合openai api 规范；
+    api_gate支持 https,生成一键 ssl 的配置脚本 ,ssl支持内网 IP 地址
+    chatbox web前端；
+
+开发环境：docker
+
+    docker run -dt -e TZ=Asia/Shanghai --name mllm_dev --restart=always --gpus all --network=host --shm-size 4G -v /home/my:/ai   nvcr.io/nvidia/pytorch:25.05-py3 /bin/bash
+
+    docker exec -it mllm_dev bash
+
+    >>nvidia-smi

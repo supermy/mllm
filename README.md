@@ -22,6 +22,7 @@
 - `stop_nginx.sh`: 独立停止 Nginx 服务的脚本。
 - `test_api.py`: 用于测试 API 端点的 Python 脚本。
 - `idea.md`: 初始项目需求和想法。
+- `setup_ssl.sh`: 一键生成/配置 SSL 证书，支持内网 IP
 
 ## 设置与运行
 
@@ -139,6 +140,36 @@ curl -X POST -H "Content-Type: application/json" \
 curl -X POST -H "Content-Type: application/json" -d '{"prompts": ["Hello, how are you?"], "sampling_params": {"max_tokens": 50}}' http://localhost:80/generate
 ```
 
+### 4. HTTPS/SSL 支持
+
+平台支持一键生成自签名 SSL 证书，支持本地和内网 IP，自动配置 Nginx HTTPS。
+
+**生成证书并配置 Nginx（支持内网 IP）：**
+
+```bash
+sudo ./setup_ssl.sh 192.168.0.168   # 也可用域名或 localhost
+```
+
+- 证书路径：/etc/ssl/certs/nginx-selfsigned.crt
+- 私钥路径：/etc/ssl/private/nginx-selfsigned.key
+- 自动生成 Nginx ssl.conf 并在 nginx.conf 中引用
+- HTTP 自动跳转到 HTTPS，支持 HTTP/2
+
+**启动服务（自动检测证书）：**
+
+```bash
+./start_ubuntu.sh
+```
+
+**测试 HTTPS 接口（自签名证书用 -k 跳过校验）：**
+
+```bash
+curl -k https://192.168.1.100/health
+curl -k -X POST -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"你好"}]}' https://192.168.1.100/v1/chat/completions
+```
+
+**Python 测试脚本也已支持 HTTPS，自签名证书自动跳过校验。**
+
 ## 注意事项
 
 - `llm_service.log` 文件将包含 LLM 服务的日志输出，用于调试。
@@ -157,3 +188,9 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompts": ["Hello, how ar
 * **安全性**: 实施 API 密钥、用户认证、访问控制等安全措施，保护平台和模型免受未经授权的访问。
 * **性能优化**: 进一步优化 `nano-vllm` 的推理性能，例如通过批量推理、量化等技术，以及对 `uWSGI` 和 `Nginx` 配置进行更精细的调优。
 * **容器化部署**: 提供 Dockerfile 和 Docker Compose 配置，方便使用 Docker 进行容器化部署，提高部署的便捷性和可移植性。
+
+## 部署与维护脚本
+
+- `setup_ssl.sh`：一键生成/配置 SSL 证书，支持内网 IP
+- `start_ubuntu.sh`：自动检测证书并启动服务
+- `test_api.py`：支持 HTTPS 测试

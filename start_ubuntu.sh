@@ -7,6 +7,12 @@ echo "==== 启动 AI 平台微服务（Ubuntu 原生环境） ===="
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${PROJECT_ROOT}"
 
+# 检查 SSL 证书
+if [ ! -f "/etc/ssl/certs/nginx-selfsigned.crt" ] || [ ! -f "/etc/ssl/private/nginx-selfsigned.key" ]; then
+    echo "SSL 证书未找到，正在配置..."
+    sudo ./setup_ssl.sh
+fi
+
 # 定义 PID 文件路径
 LLM_SERVICE_PID_FILE="llm_service.pid"
 # APP_GATEWAY_PID_FILE="app_gateway.pid" # 移除 API 网关 PID 文件定义
@@ -45,9 +51,14 @@ echo ""
 echo "-------------------------------------------------------------------"
 echo "AI Platform microservices are now running on Ubuntu!"
 echo "LLM Service (PID: $(cat "${LLM_SERVICE_PID_FILE}")) is on port 5002."
-echo "Nginx (OpenResty) is running and serving the application on port 80, handling API Gateway logic via Lua."
-echo "You can test the API using: curl http://localhost:80/health"
-echo "And for generation: curl -X POST -H \"Content-Type: application/json\" -d '{\"prompts\": [\"Hello, how are you?\"], \"sampling_params\": {\"max_tokens\": 50}}' http://localhost:80/generate"
+echo "Nginx (OpenResty) is running and serving:"
+echo "- HTTP on port 80 (redirects to HTTPS)"
+echo "- HTTPS on port 443"
+echo ""
+echo "You can test the API using:"
+echo "curl -k https://localhost/health"
+echo "curl -k -X POST -H \"Content-Type: application/json\" -d '{\"messages\": [{\"role\": \"user\", \"content\": \"Hello\"}]}' https://localhost/v1/chat/completions"
+echo ""
+echo "Note: -k flag is used to skip SSL certificate verification for self-signed certificates"
 echo "To stop the services, run: ./stop_ubuntu.sh"
-echo "-------------------------------------------------------------------
-" 
+echo "-------------------------------------------------------------------"
