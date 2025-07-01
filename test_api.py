@@ -5,6 +5,13 @@ import urllib3
 # 禁用自签名证书警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# API 密钥配置
+API_KEY = "sk-test123456"  # 替换为实际的 API 密钥
+HEADERS = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+
 # 1. OpenAI 兼容接口测试
 OPENAI_API_URL = "https://localhost/v1/chat/completions"  # 使用 HTTPS
 openai_payload = {
@@ -18,7 +25,10 @@ openai_payload = {
 
 print("\n==== 测试 OpenAI 兼容接口 /v1/chat/completions ====")
 try:
-    response = requests.post(OPENAI_API_URL, json=openai_payload, verify=False)  # verify=False 允许自签名证书
+    response = requests.post(OPENAI_API_URL, 
+                           headers=HEADERS,
+                           json=openai_payload, 
+                           verify=False)  # verify=False 允许自签名证书
     response.raise_for_status()
     print("请求成功！")
     print("状态码:", response.status_code)

@@ -2,8 +2,27 @@
 
 local cjson = require "cjson"
 local http = require "resty.http"
+local auth = require "modules.auth"
 
 local LLM_SERVICE_URL = "http://127.0.0.1:5002"
+
+-- 初始化共享内存字典，用于限流
+local shared_dict_exists, _ = pcall(function() return ngx.shared.limit_store end)
+if not shared_dict_exists then
+    ngx.log(ngx.ERR, "请在 nginx.conf 的 http 块添加: lua_shared_dict limit_store 10m;")
+end
+
+-- 先进行认证
+local function authenticate_request()
+    if ngx.var.uri == "/health" then
+        return true  -- 健康检查接口不需要认证
+    end
+    return auth.authenticate()
+end
+
+if not authenticate_request() then
+    return  -- 认证失败，auth 模块已经输出了错误响应
+end
 
 -- 转换 OpenAI 格式到内部格式
 local function convert_openai_to_internal(openai_request)

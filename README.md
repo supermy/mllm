@@ -164,11 +164,36 @@ sudo ./setup_ssl.sh 192.168.0.168   # 也可用域名或 localhost
 **测试 HTTPS 接口（自签名证书用 -k 跳过校验）：**
 
 ```bash
-curl -k https://192.168.1.100/health
-curl -k -X POST -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"你好"}]}' https://192.168.1.100/v1/chat/completions
+curl -k https://192.168.0.168/health
+curl -k -X POST -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"你好"}]}' https://192.168.0.168/v1/chat/completions
 ```
 
 **Python 测试脚本也已支持 HTTPS，自签名证书自动跳过校验。**
+
+## API 认证
+
+服务使用 AppKey 进行认证和访问控制：
+
+1. 在请求头中添加 AppKey：
+```bash
+curl -H "Authorization: Bearer YOUR-API-KEY" ...
+# 或
+curl -H "Authorization: YOUR-API-KEY" ...
+```
+
+2. AppKey 配置在 `conf/appkeys.lua`：
+```lua
+_M.keys = {
+    ["sk-test123456"] = { name = "测试应用", qps = 10 },
+    -- 添加更多 AppKey
+}
+```
+
+特点：
+- 支持每个 AppKey 独立的 QPS 限制
+- 健康检查接口 `/health` 无需认证
+- 支持 OpenAI 风格的 Bearer Token
+- 可选 Redis 分布式限流支持
 
 ## 注意事项
 
@@ -177,7 +202,40 @@ curl -k -X POST -H "Content-Type: application/json" -d '{"messages":[{"role":"us
 - 如果遇到 `Model not loaded` 错误，请检查 `llm_service.log` 中的详细错误信息。这通常与模型路径、CUDA 环境或 `nano-vllm` 的依赖有关。
 - 如果遇到 `415 Unsupported Media Type` 错误，请确保您的请求头 `Content-Type` 正确设置为 `application/json`。如果问题持续，请检查 Nginx 和 uWSGI 配置中的头转发。
 
-## 5. 未来增强
+## 5. 测试脚本
+
+本项目提供了 `test_api.py` 脚本，支持 HTTPS 和 AppKey 认证自动化测试。
+
+**用法：**
+
+1. 编辑 `test_api.py`，将 `API_KEY` 替换为 conf/appkeys.lua 中配置的有效 key。
+2. 运行测试：
+
+```bash
+python3 test_api.py
+```
+
+**脚本功能：**
+- 自动跳过自签名证书校验（适合开发环境）
+- 自动携带 AppKey 认证头
+- 同时测试 OpenAI 兼容接口和旧版 /generate 接口
+- 打印详细响应内容
+
+**示例代码片段：**
+```python
+API_KEY = "sk-test123456"  # 替换为你的 AppKey
+HEADERS = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+response = requests.post("https://localhost/v1/chat/completions", headers=HEADERS, json=payload, verify=False)
+```
+
+**常见问题：**
+- 若提示 401/429，请检查 AppKey 是否正确、QPS 是否超限。
+- 若提示证书不受信任，可用 `-k` 跳过校验或信任自签名证书。
+
+## 未来增强
 
 根据 `idea.md` 的设想，未来可以考虑以下增强功能：
 
@@ -193,4 +251,48 @@ curl -k -X POST -H "Content-Type: application/json" -d '{"messages":[{"role":"us
 
 - `setup_ssl.sh`：一键生成/配置 SSL 证书，支持内网 IP
 - `start_ubuntu.sh`：自动检测证书并启动服务
-- `test_api.py`：支持 HTTPS 测试
+
+### 6. 常用 HTTPS + AppKey 测试命令
+
+以下命令假设服务 IP 为 192.168.0.168，AppKey 为 sk-test123456：
+
+```bash
+# 1. 健康检查（无需 AppKey）
+curl -k https://192.168.0.168/health
+
+# 2. OpenAI 兼容接口（推荐，需 AppKey）
+curl -k -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-test123456" \
+  -d '{
+        "messages": [
+            {"role": "system", "content": "你是一个有帮助的助手。"},
+            {"role": "user", "content": "你好"}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 100
+      }' \
+  https://192.168.0.168/v1/chat/completions
+
+# 3. 也支持不带 Bearer 前缀
+curl -k -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: sk-test123456" \
+  -d '{
+        "messages": [
+            {"role": "user", "content": "你好"}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 100
+      }' \
+  https://192.168.0.168/v1/chat/completions
+
+# 4. 旧版 /generate 接口（如需兼容测试）
+curl -k -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-test123456" \
+  -d '{"prompts": ["你好"], "sampling_params": {"max_tokens": 50}}' \
+  https://192.168.0.168/generate
+```
+
+请将 `sk-test123456` 替换为你实际的 AppKey。
