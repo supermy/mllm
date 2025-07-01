@@ -24,6 +24,10 @@ echo "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main" \
 apt-get update
 apt-get install -y openresty
 
+opm get ledgetech/lua-resty-http   # 安装 HTTP 库
+opm search http                          # 搜索 HTTP 相关模块
+opm info ledgetech/lua-resty-http       # 查看库信息
+
 # 2. 安装 Python 依赖
 pip install --upgrade pip
 pip install -r requirements.txt

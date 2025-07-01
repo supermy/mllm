@@ -5,3 +5,6 @@
 4.生成完整的部署维护脚本，分为 macos 与 ubuntu 两套；
 5.生成测试脚本； 
 6.追求极致性能，uWSGI+nginx unix soclet 链接。
+
+接口符合 openai 规范；
+openai web前端；

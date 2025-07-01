@@ -87,7 +87,53 @@ sh stop_ubuntu.sh
 curl http://localhost:80/health
 ```
 
-**文本生成**:
+**OpenAI 兼容接口（推荐）**:
+
+- 端点：`/v1/chat/completions`
+- 请求格式：兼容 OpenAI 官方 API
+
+请求示例：
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+    -d '{
+        "messages": [
+            {"role": "system", "content": "你是一个有帮助的助手。"},
+            {"role": "user", "content": "你好！"}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 100
+    }' \
+    http://localhost:80/v1/chat/completions
+```
+
+响应示例：
+
+```json
+{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "created": 1719830000,
+  "model": "local-model",
+  "usage": {
+    "prompt_tokens": -1,
+    "completion_tokens": -1,
+    "total_tokens": -1
+  },
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "你好！有什么可以帮您？"
+      },
+      "finish_reason": "stop",
+      "index": 0
+    }
+  ]
+}
+```
+
+**兼容旧版 /generate 接口**:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{"prompts": ["Hello, how are you?"], "sampling_params": {"max_tokens": 50}}' http://localhost:80/generate
@@ -111,4 +157,3 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompts": ["Hello, how ar
 * **安全性**: 实施 API 密钥、用户认证、访问控制等安全措施，保护平台和模型免受未经授权的访问。
 * **性能优化**: 进一步优化 `nano-vllm` 的推理性能，例如通过批量推理、量化等技术，以及对 `uWSGI` 和 `Nginx` 配置进行更精细的调优。
 * **容器化部署**: 提供 Dockerfile 和 Docker Compose 配置，方便使用 Docker 进行容器化部署，提高部署的便捷性和可移植性。
- 
