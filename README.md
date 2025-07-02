@@ -23,6 +23,7 @@
 - `test_api.py`: 用于测试 API 端点的 Python 脚本。
 - `idea.md`: 初始项目需求和想法。
 - `setup_ssl.sh`: 一键生成/配置 SSL 证书，支持内网 IP
+- `docker_env_setup.sh`：一键配置容器环境脚本
 
 ## 设置与运行
 
@@ -251,6 +252,7 @@ response = requests.post("https://localhost/v1/chat/completions", headers=HEADER
 
 - `setup_ssl.sh`：一键生成/配置 SSL 证书，支持内网 IP
 - `start_ubuntu.sh`：自动检测证书并启动服务
+- `docker_env_setup.sh`：一键配置容器环境脚本
 
 ### 6. 常用 HTTPS + AppKey 测试命令
 
@@ -296,3 +298,30 @@ curl -k -X POST \
 ```
 
 请将 `sk-test123456` 替换为你实际的 AppKey。
+
+### 7. Docker 容器环境一键准备
+
+如在官方 NVIDIA PyTorch 容器（nvcr.io/nvidia/pytorch:25.05-py3）内部署，推荐使用：
+
+```bash
+bash docker_env_setup.sh
+```
+
+脚本功能：
+- 配置 pip 源（清华镜像）
+- 安装系统依赖、OpenResty、Lua HTTP 库
+- 安装 Python 依赖和 uWSGI
+- 检查 CUDA 环境
+- 提示模型目录
+- 结束后自动提示启动、SSL 配置、测试命令
+
+**典型流程：**
+1. 进入容器后，cd 到 /ai/mllm 目录
+2. 执行 bash docker_env_setup.sh
+3. 按提示运行 ./start_ubuntu.sh 启动服务
+4. 按需配置 SSL 证书、运行测试脚本
+
+**注意事项：**
+- 需提前挂载好模型目录（如 -v /home/my:/ai）
+- 如遇依赖问题可多次运行脚本或手动补充
+- 推荐结合 docker_pull_run.sh 脚本一键拉取镜像并进入容器
