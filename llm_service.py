@@ -54,7 +54,9 @@ def generate_text():
 
     try:
         outputs = llm.generate(prompts, sampling_params)
-        results = [output["text"] for output in outputs]
+        results = [
+            {"prompt": p, "text": o["text"]} for p, o in zip(prompts, outputs)
+        ]
         return jsonify({"results": results})
     except Exception as e:
         return jsonify({"error": f"Error during generation: {e}"}), 500
@@ -68,4 +70,4 @@ def health_check():
         return jsonify({"status": "Model not loaded. Check logs for errors."}), 503
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002) # LLM 服务将在 5002 端口运行 
+    app.run(host='0.0.0.0', port=5002) # LLM 服务将在 5002 端口运行
