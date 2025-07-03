@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI ChatBox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light">
+  <div class="chatbox-container">
+    <header>
+      <h1>AI ChatBox</h1>
+      <button id="toggle-theme">🌙 夜间模式</button>
+    </header>
+    <div id="chat-window" class="chat-window"></div>
+    <form id="chat-form">
+      <input type="text" id="user-input" placeholder="请输入你的问题..." autocomplete="off" required />
+      <button type="submit">发送</button>
+    </form>
+  </div>
+  <script src="chatbox.js"></script>
+</body>
+</html>

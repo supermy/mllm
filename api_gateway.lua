@@ -54,6 +54,49 @@ local function convert_openai_to_internal(openai_request)
 end
 
 -- 转换内部响应格式到 OpenAI 格式
+local function extract_latest_assistant_response(full_text)
+    local assistant_marker = "[ASSISTANT]"
+    local last_assistant_marker_start = nil
+    local current_pos = 1
+    while true do
+        local start_pos, end_pos = string.find(full_text, assistant_marker, current_pos, true) -- true for plain text search
+        if start_pos then
+            last_assistant_marker_start = start_pos
+            current_pos = end_pos + 1
+        else
+            break
+        end
+    end
+
+    if not last_assistant_marker_start then
+        return full_text
+    end
+
+    local potential_response = string.sub(full_text, last_assistant_marker_start + string.len(assistant_marker .. " "))
+
+    -- 查找内部独白或下一个用户/助手对话的起始位置
+    -- 内部独白通常以双换行符加 "好的，现在用户在重复" 开始
+    local monologue_start = string.find(potential_response, "\n\n好的，现在用户在重复", 1, true)
+    -- 下一个用户对话的起始
+    local next_user_start = string.find(potential_response, "\n[USER]", 1, true)
+
+    local end_of_response_index = #potential_response + 1 -- 默认到字符串末尾
+
+    if monologue_start then
+        end_of_response_index = math.min(end_of_response_index, monologue_start)
+    end
+    if next_user_start then
+        end_of_response_index = math.min(end_of_response_index, next_user_start)
+    end
+
+    local extracted_content = string.sub(potential_response, 1, end_of_response_index - 1)
+
+    -- 移除提取内容前后的空白字符和换行符
+    extracted_content = string.gsub(extracted_content, "^%s*(.-)%s*$", "%1")
+
+    return extracted_content
+end
+
 local function convert_internal_to_openai(internal_response)
     ngx.log(ngx.DEBUG, "[convert_internal_to_openai] 入参: " .. cjson.encode(internal_response))
     local responses = internal_response.responses or internal_response.results
@@ -66,6 +109,9 @@ local function convert_internal_to_openai(internal_response)
             }
         }
     end
+
+    local full_llm_response_text = responses[1].text or ""
+    local content_to_use = extract_latest_assistant_response(full_llm_response_text)
 
     local result = {
         id = "chatcmpl-" .. ngx.now() * 1000,
@@ -81,7 +127,7 @@ local function convert_internal_to_openai(internal_response)
             {
                 message = {
                     role = "assistant",
-                    content = responses[1]
+                    content = content_to_use -- 使用提取后的内容
                 },
                 finish_reason = "stop",
                 index = 0
@@ -183,9 +229,11 @@ local function handle_chat_completion()
         return
     end
 
-    ngx.log(ngx.DEBUG, "[chat_completion] LLM 服务响应: " .. tostring(res.body))
+    ngx.log(ngx.DEBUG, "[chat_completion] LLM 服务原始响应状态: " .. tostring(res.status))
+    ngx.log(ngx.DEBUG, "[chat_completion] LLM 服务原始响应体: " .. tostring(res.body))
     -- 转换响应格式
     local internal_response = cjson.decode(res.body)
+    ngx.log(ngx.DEBUG, "[chat_completion] LLM 服务响应解析为 internal_response: " .. cjson.encode(internal_response))
     local openai_response = convert_internal_to_openai(internal_response)
 
     ngx.status = res.status

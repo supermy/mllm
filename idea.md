@@ -10,7 +10,7 @@
     api_gate 符合openai api 规范；
     api_gate支持 https,生成一键 ssl 的配置脚本 ,ssl支持内网 IP 地址；
     apt_gate 支持 appkey;
-    chatbox web前端；
+   生成 chatbox web 版本，能与 ap_gate 联调，皮肤分为白天黑夜两种模式。
 
 开发环境：docker
 
