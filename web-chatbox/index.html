@@ -3,21 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI ChatBox</title>
+  <title>AI ChatBox - 本地大语言模型聊天</title>
+  <meta name="description" content="基于本地大语言模型的智能聊天助手，支持白天/黑夜主题切换">
+  <!-- Bootstrap 5 CSS -->
+  <link href="./lib/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 </head>
-<body class="light">
-  <div class="chatbox-container">
-    <header>
-      <h1>AI ChatBox</h1>
-      <button id="toggle-theme">🌙 夜间模式</button>
-    </header>
-    <div id="chat-window" class="chat-window"></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="请输入你的问题..." autocomplete="off" required />
-      <button type="submit">发送</button>
-    </form>
+<body>
+  <div class="container py-4" style="max-width: 700px;">
+    <div class="card shadow-lg">
+      <div class="card-header d-flex justify-content-between align-items-center bg-body-tertiary">
+        <h1 class="h4 mb-0">🤖 AI ChatBox</h1>
+        <div class="d-flex align-items-center gap-2">
+          <button id="toggle-theme" class="btn btn-outline-secondary btn-sm" title="切换主题 (Ctrl+L)">🌙 夜间模式</button>
+          <button id="clear-chat" class="btn btn-outline-danger btn-sm" title="清空聊天 (Ctrl+K)">🗑️ 清空</button>
+          <button id="settings-btn" class="btn btn-outline-primary btn-sm" title="设置 (Ctrl+,)">⚙️ 设置</button>
+        </div>
+      </div>
+      <div id="chat-window" class="card-body chat-window bg-light" style="height: 400px; overflow-y: auto;"></div>
+      <div class="card-footer bg-body-tertiary">
+        <form id="chat-form" class="d-flex gap-2">
+          <input type="text" id="user-input" class="form-control" placeholder="请输入你的问题..." autocomplete="off" required />
+          <button type="submit" class="btn btn-primary">发送</button>
+        </form>
+      </div>
+    </div>
   </div>
+
+  <!-- 设置面板 Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">设置</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="settings-form">
+            <div class="mb-3">
+              <label for="api-key" class="form-label">API Key</label>
+              <input type="password" class="form-control" id="api-key" placeholder="输入你的 API Key" value="sk-test123456">
+            </div>
+            <div class="mb-3">
+              <label for="api-url" class="form-label">API URL</label>
+              <input type="url" class="form-control" id="api-url" placeholder="API 服务器地址" value="https://192.168.0.168">
+            </div>
+            <div class="mb-3">
+              <label for="model-name" class="form-label">模型名称</label>
+              <input type="text" class="form-control" id="model-name" value="local-model">
+            </div>
+            <div class="mb-3">
+              <label for="temperature" class="form-label">温度 (Temperature): <span id="temperature-value">0.7</span></label>
+              <input type="range" class="form-range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+            </div>
+            <div class="mb-3">
+              <label for="max-tokens" class="form-label">最大 Token 数</label>
+              <input type="number" class="form-control" id="max-tokens" min="1" max="4000" value="1000">
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="auto-scroll" checked>
+              <label class="form-check-label" for="auto-scroll">自动滚动到底部</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="show-timestamps" checked>
+              <label class="form-check-label" for="show-timestamps">显示时间戳</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+          <button type="button" class="btn btn-primary" id="save-settings">保存设置</button>
+          <button type="button" class="btn btn-outline-danger" id="reset-settings">重置默认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="./lib/js/bootstrap.bundle.min.js"></script>
+  <script src="config.js"></script>
+  <script src="settings.js"></script>
   <script src="chatbox.js"></script>
 </body>
 </html>
